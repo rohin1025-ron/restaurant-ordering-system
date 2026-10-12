@@ -1,0 +1,8 @@
+{
+  "name": "tiffin-restaurant-ordering",
+  "version": "1.0.0",
+  "description": "Restaurant Ordering System - MongoDB (BCSE302P)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2", "mongodb": "^6.8.0" }
+}

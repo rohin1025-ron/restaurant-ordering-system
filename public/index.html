@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiffin – Restaurant Ordering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --leaf:#12372A; --leaf-2:#1F5A43; --leaf-soft:#E3EEE7;
+  --turmeric:#F0B429; --turmeric-soft:#FFF4D6;
+  --chilli:#C23B2E; --chilli-soft:#FBE7E4;
+  --paper:#F4F7F4; --card:#FFFFFF; --line:#D6DFD8; --ink:#16231C; --muted:#5C6C63;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--body)}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;letter-spacing:-.01em}
+h2{font-size:1.5rem} h3{font-size:1.05rem}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--turmeric);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* header */
+header{background:var(--leaf);color:#fff;position:sticky;top:0;z-index:20}
+.bar{max-width:1280px;margin:auto;padding:10px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{font:800 1.6rem var(--display);color:var(--turmeric);letter-spacing:-.02em;margin-right:8px}
+.brand small{font:500 .75rem var(--body);color:#B9D1C4;margin-left:8px;letter-spacing:0}
+nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+nav button{background:none;border:0;color:#CFE0D6;padding:8px 14px;border-radius:8px;font-weight:600}
+nav button:hover{background:rgba(255,255,255,.08)}
+nav button[aria-current="page"]{background:var(--turmeric);color:var(--leaf)}
+.who{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.who button{background:none;border:1px solid #4C7A66;color:#fff;border-radius:8px;padding:6px 12px}
+
+main{max-width:1280px;margin:auto;padding:24px 20px 60px}
+.view-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.view-head p{margin:4px 0 0;color:var(--muted)}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.btn{border:0;border-radius:8px;padding:9px 16px;font-weight:600;background:var(--leaf);color:#fff}
+.btn:hover{background:var(--leaf-2)}
+.btn:disabled{background:#B9C5BD;cursor:not-allowed}
+.btn.alt{background:var(--turmeric);color:var(--leaf)}
+.btn.alt:hover{background:#E0A41E}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--leaf-soft)}
+.btn.danger{background:none;border:1px solid var(--chilli);color:var(--chilli)}
+.btn.danger:hover{background:var(--chilli-soft)}
+.btn.sm{padding:5px 10px;font-size:.85rem}
+label{display:block;font-weight:600;font-size:.88rem;margin-bottom:4px}
+input[type=text],input[type=email],input[type=number],select{width:100%;padding:9px 11px;border:1px solid #BFCBC3;border-radius:8px;background:#fff}
+.field{margin-bottom:12px}
+.badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:600;background:var(--leaf-soft);color:var(--leaf)}
+.badge.warn{background:var(--turmeric-soft);color:#7A5600}
+.badge.bad{background:var(--chilli-soft);color:var(--chilli)}
+.muted{color:var(--muted)} .right{text-align:right}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 14px;font-size:.88rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--leaf);color:#fff;border-color:var(--leaf)}
+
+/* order view */
+.toolbar{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(0,2fr) 170px;gap:12px;align-items:center;margin-bottom:18px}
+.order-grid{display:grid;grid-template-columns:270px minmax(0,1fr) 320px;gap:18px;align-items:start}
+.rest-list{display:flex;flex-direction:column;gap:8px}
+.rest{width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.rest:hover{border-color:var(--leaf-2)}
+.rest[aria-pressed="true"]{border-color:var(--leaf);box-shadow:inset 4px 0 0 var(--turmeric);background:var(--leaf-soft)}
+.rest b{font-family:var(--display);font-size:1.02rem}
+.rest .meta{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-top:2px}
+.menu-filters{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin:12px 0 14px}
+.menu-filters .field{margin:0}
+.menu-filters input[type=range]{width:150px;accent-color:var(--leaf)}
+.dish{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.dish:first-child{border-top:0}
+.dish .info{flex:1;min-width:0}
+.dish .name{font-weight:600}
+.dish .price{font-family:var(--display);font-weight:700;min-width:60px;text-align:right}
+.dish.off{opacity:.55}
+.cart{position:sticky;top:76px}
+.cart h3{margin-bottom:10px}
+.line{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem}
+.line .n{flex:1;min-width:0}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:26px;height:26px;border-radius:6px;border:1px solid #BFCBC3;background:#fff;line-height:1}
+.total{display:flex;justify-content:space-between;font:700 1.2rem var(--display);padding:14px 0 6px}
+.pay{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 14px}
+.pay label{border:1px solid #BFCBC3;border-radius:8px;text-align:center;padding:7px 4px;font-weight:600;margin:0;cursor:pointer}
+.pay input{position:absolute;opacity:0;pointer-events:none}
+.pay label:has(input:checked){background:var(--leaf);color:#fff;border-color:var(--leaf)}
+.pay label:has(input:focus-visible){outline:3px solid var(--turmeric)}
+
+/* order cards + tracker */
+.orders{display:grid;gap:14px}
+.ocard header{all:unset;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tracker{display:flex;list-style:none;margin:14px 0 16px;padding:0}
+.tracker li{flex:1;text-align:center;position:relative;font-size:.8rem;color:var(--muted);font-weight:600}
+.tracker li::before{content:"";display:block;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--line);margin:0 auto 6px;position:relative;z-index:1}
+.tracker li::after{content:"";position:absolute;top:10px;left:-50%;width:100%;height:3px;background:var(--line)}
+.tracker li:first-child::after{display:none}
+.tracker li.done{color:var(--leaf)}
+.tracker li.done::before{background:var(--turmeric);border-color:var(--turmeric)}
+.tracker li.done::after{background:var(--turmeric)}
+.tracker li.now::before{box-shadow:0 0 0 5px var(--turmeric-soft)}
+.cancelled-note{background:var(--chilli-soft);color:var(--chilli);border-radius:10px;padding:10px 14px;font-weight:600;margin:12px 0}
+.items{width:100%;border-collapse:collapse;font-size:.93rem}
+.items td,.items th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.items th{font-weight:600;color:var(--muted);font-size:.82rem}
+.items .num{text-align:right}
+.items input[type=number]{width:64px;padding:4px 6px}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* panel */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-row{display:grid;grid-template-columns:1fr 90px auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.menu-row input{padding:5px 8px}
+
+/* analytics */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi b{display:block;font:800 1.7rem var(--display);color:var(--leaf)}
+.kpi span{color:var(--muted);font-size:.88rem}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.chart h3{margin-bottom:12px}
+.hbar{display:grid;grid-template-columns:110px 1fr 74px;gap:10px;align-items:center;font-size:.88rem;margin:7px 0}
+.hbar .track{background:var(--leaf-soft);border-radius:6px;height:16px;overflow:hidden}
+.hbar .fill{height:100%;background:var(--leaf-2);border-radius:6px}
+.hbar .fill.t{background:var(--turmeric)}
+.hbar span:last-child{text-align:right;font-weight:600}
+.hbar span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wide{grid-column:1/-1}
+.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rec{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--turmeric-soft)}
+svg text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+
+/* account */
+.account{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:820px}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;align-items:center}
+.t{background:var(--leaf);color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.t.err{background:var(--chilli)}
+
+@media(max-width:1020px){
+  .order-grid{grid-template-columns:1fr}
+  .cart{position:static}
+  .toolbar{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .hbar{grid-template-columns:80px 1fr 62px}
+  .menu-row{grid-template-columns:1fr 80px}
+  .form-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:no-preference){
+  .fill{transition:width .5s}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">Tiffin<small>restaurant ordering</small></div>
+    <nav aria-label="Main">
+      <button data-view="order">Order food</button>
+      <button data-view="orders">My orders</button>
+      <button data-view="panel">Restaurant panel</button>
+      <button data-view="analytics">Analytics</button>
+    </nav>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+
+<main>
+  <!-- ORDER -->
+  <section id="view-order" hidden>
+    <div class="view-head">
+      <div><h2>Order food</h2><p>Pick a restaurant, filter its menu, and add dishes to your cart.</p></div>
+    </div>
+    <div class="toolbar">
+      <div><label for="dishSearch" class="muted" style="font-weight:500">Search dishes</label>
+        <input type="text" id="dishSearch" placeholder="Try biryani, pizza or coffee" autocomplete="off"></div>
+      <div><label class="muted" style="font-weight:500">Cuisine</label><div class="chips" id="cuisineChips"></div></div>
+      <div><label for="locSel" class="muted" style="font-weight:500">Area</label><select id="locSel"></select></div>
+    </div>
+    <div class="order-grid">
+      <div class="rest-list" id="restList" aria-label="Restaurants"></div>
+      <div class="card" id="menuPane"></div>
+      <aside class="card cart" id="cartPane" aria-label="Your cart"></aside>
+    </div>
+  </section>
+
+  <!-- MY ORDERS -->
+  <section id="view-orders" hidden>
+    <div class="view-head">
+      <div><h2>My orders</h2><p>Status updates here every few seconds, so you can follow an order from kitchen to door.</p></div>
+      <button class="btn ghost" id="refreshOrders">Refresh now</button>
+    </div>
+    <div class="orders" id="ordersList"></div>
+  </section>
+
+  <!-- RESTAURANT PANEL -->
+  <section id="view-panel" hidden>
+    <div class="view-head">
+      <div><h2>Restaurant panel</h2><p>Move incoming orders forward and keep your menu up to date.</p></div>
+      <div style="min-width:240px"><label for="panelRest">Restaurant</label><select id="panelRest"></select></div>
+    </div>
+    <div class="split">
+      <div class="card"><div class="row-between" style="margin-bottom:10px"><h3>Incoming orders</h3>
+        <div class="chips" id="panelFilter"></div></div><div id="panelOrders"></div></div>
+      <div style="display:grid;gap:18px">
+        <div class="card"><h3 style="margin-bottom:6px">Menu</h3><div id="panelMenu"></div></div>
+        <div class="card"><h3 style="margin-bottom:10px">Add a menu item</h3>
+          <form id="addItemForm" class="form-grid">
+            <div class="field"><label for="aiName">Name</label><input type="text" id="aiName" required></div>
+            <div class="field"><label for="aiCat">Category</label><input type="text" id="aiCat" required placeholder="Main Course"></div>
+            <div class="field"><label for="aiPrice">Price (₹)</label><input type="number" id="aiPrice" min="1" step="1" required></div>
+            <div class="field"><label for="aiAvail">Availability</label><select id="aiAvail"><option>Available</option><option>Unavailable</option></select></div>
+            <div style="grid-column:1/-1"><button class="btn">Add item</button></div>
+          </form></div>
+        <div class="card"><h3 style="margin-bottom:10px">Register a new restaurant</h3>
+          <form id="addRestForm" class="form-grid">
+            <div class="field"><label for="arName">Name</label><input type="text" id="arName" required></div>
+            <div class="field"><label for="arLoc">Area</label><input type="text" id="arLoc" required placeholder="Vellore"></div>
+            <div class="field"><label for="arCui">Cuisine</label><input type="text" id="arCui" required placeholder="Indian"></div>
+            <div style="align-self:end;margin-bottom:12px"><button class="btn alt">Register restaurant</button></div>
+          </form></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="view-analytics" hidden>
+    <div class="view-head">
+      <div><h2>Analytics</h2><p>Live results from MongoDB aggregation pipelines (cancelled orders are excluded from revenue).</p></div>
+      <button class="btn ghost" id="refreshAnalytics">Refresh</button>
+    </div>
+    <div id="analyticsBody"></div>
+  </section>
+
+  <!-- ACCOUNT -->
+  <section id="view-account" hidden>
+    <div class="view-head"><div><h2 id="accTitle">Your account</h2><p id="accSub"></p></div></div>
+    <div class="account" id="accountBody"></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------------- helpers ---------------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr = n => "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+const fmtDate = d => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+async function api(path, opts = {}) {
+  const res = await fetch("/api" + path, {
+    method: opts.method || "GET",
+    headers: { "Content-Type": "application/json" },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+function toast(msg, err = false) {
+  const t = document.createElement("div");
+  t.className = "t" + (err ? " err" : ""); t.textContent = msg;
+  $("#toast").append(t); setTimeout(() => t.remove(), 3500);
+}
+const guard = fn => async (...a) => { try { await fn(...a); } catch (e) { toast(e.message, true); } };
+
+/* ---------------- state ---------------- */
+const S = {
+  customer: JSON.parse(localStorage.getItem("tiffin.customer") || "null"),
+  restaurants: [], cuisine: "", location: "", restId: null,
+  categories: [], maxPrice: 0, menuPrice: 0, category: "", availOnly: false,
+  cart: { restaurantId: null, lines: {} },
+  view: "order", editing: null, panelRest: null, panelStatus: "Active"
+};
+
+/* ---------------- navigation ---------------- */
+const loaders = { order: loadOrderView, orders: loadOrders, panel: loadPanel, analytics: loadAnalytics, account: renderAccount };
+function show(view) {
+  S.view = view;
+  $$("main > section").forEach(s => s.hidden = s.id !== "view-" + view);
+  $$("nav button").forEach(b => b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false"));
+  window.scrollTo(0, 0);
+  guard(loaders[view])();
+}
+$$("nav button").forEach(b => b.onclick = () => show(b.dataset.view));
+
+function renderWho() {
+  const w = $("#who");
+  w.innerHTML = S.customer
+    ? `<span>Hi, <b>${esc(S.customer.name)}</b></span><button id="accBtn">Account</button><button id="outBtn">Sign out</button>`
+    : `<button id="accBtn">Sign in or register</button>`;
+  $("#accBtn").onclick = () => show("account");
+  if ($("#outBtn")) $("#outBtn").onclick = () => { S.customer = null; localStorage.removeItem("tiffin.customer"); renderWho(); toast("Signed out"); show("order"); };
+}
+function needLogin() {
+  if (S.customer) return false;
+  toast("Sign in first to continue", true); show("account"); return true;
+}
+
+/* ---------------- ORDER VIEW ---------------- */
+async function loadOrderView() {
+  if (!S.restaurants.length) S.restaurants = await api("/restaurants");
+  const cuisines = [...new Set(S.restaurants.map(r => r.cuisine))].sort();
+  const locs = [...new Set(S.restaurants.map(r => r.location))].sort();
+  $("#cuisineChips").innerHTML = ["All", ...cuisines].map(c =>
+    `<button class="chip" aria-pressed="${(c === "All" ? "" : c) === S.cuisine}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  $$("#cuisineChips .chip").forEach(b => b.onclick = () => { S.cuisine = b.dataset.c === "All" ? "" : b.dataset.c; loadOrderView(); });
+  $("#locSel").innerHTML = ["", ...locs].map(l => `<option value="${esc(l)}" ${l === S.location ? "selected" : ""}>${l ? esc(l) : "All areas"}</option>`).join("");
+  $("#locSel").onchange = e => { S.location = e.target.value; loadOrderView(); };
+  renderRestaurants();
+  if (!S.restId && S.restaurants.length) S.restId = S.restaurants[0].restaurantId;
+  if (!$("#dishSearch").value) await loadMenu(true);
+  renderCart();
+}
+function filteredRestaurants() {
+  return S.restaurants.filter(r => (!S.cuisine || r.cuisine === S.cuisine) && (!S.location || r.location === S.location));
+}
+function renderRestaurants() {
+  const list = filteredRestaurants();
+  $("#restList").innerHTML = list.length ? list.map(r => `
+    <button class="rest" aria-pressed="${r.restaurantId === S.restId}" data-id="${esc(r.restaurantId)}">
+      <b>${esc(r.name)}</b>
+      <div class="meta"><span>${esc(r.cuisine)} · ${esc(r.location)}</span><span>★ ${Number(r.rating).toFixed(1)}</span></div>
+    </button>`).join("") : `<div class="empty">No restaurants match these filters. Choose “All” to see everything.</div>`;
+  $$("#restList .rest").forEach(b => b.onclick = () => { $("#dishSearch").value = ""; S.restId = b.dataset.id; S.category = ""; S.availOnly = false; renderRestaurants(); guard(loadMenu)(true); });
+}
+async function loadMenu(reset = false) {
+  const r = S.restaurants.find(x => x.restaurantId === S.restId);
+  if (!r) { $("#menuPane").innerHTML = `<div class="empty">Select a restaurant to see its menu.</div>`; return; }
+  if (reset) {
+    const all = await api(`/restaurants/${S.restId}/menu`);
+    S.categories = [...new Set(all.map(i => i.category))];
+    S.maxPrice = Math.max(0, ...all.map(i => i.price));
+    S.menuPrice = S.maxPrice;
+  }
+  const q = new URLSearchParams();
+  if (S.category) q.set("category", S.category);
+  q.set("maxPrice", S.menuPrice);
+  if (S.availOnly) q.set("available", "true");
+  const items = await api(`/restaurants/${S.restId}/menu?${q}`);
+  $("#menuPane").innerHTML = `
+    <div class="row-between"><h2>${esc(r.name)}</h2><span class="badge">${esc(r.cuisine)} · ${esc(r.location)} · ★ ${Number(r.rating).toFixed(1)}</span></div>
+    <div class="menu-filters">
+      <div class="field"><label for="fCat">Category</label><select id="fCat"><option value="">All</option>
+        ${S.categories.map(c => `<option ${c === S.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></div>
+      <div class="field"><label for="fPrice">Max price: <span id="fPriceVal">${inr(S.menuPrice)}</span></label>
+        <input type="range" id="fPrice" min="10" max="${S.maxPrice}" step="10" value="${S.menuPrice}"></div>
+      <label style="display:flex;gap:6px;align-items:center;margin:0 0 6px"><input type="checkbox" id="fAvail" ${S.availOnly ? "checked" : ""}> Available only</label>
+    </div>
+    <div id="dishes">${dishRows(items)}</div>`;
+  $("#fCat").onchange = e => { S.category = e.target.value; guard(loadMenu)(); };
+  $("#fPrice").oninput = e => $("#fPriceVal").textContent = inr(e.target.value);
+  $("#fPrice").onchange = e => { S.menuPrice = Number(e.target.value); guard(loadMenu)(); };
+  $("#fAvail").onchange = e => { S.availOnly = e.target.checked; guard(loadMenu)(); };
+  bindDishes(items);
+}
+function dishRows(items, showRest = false) {
+  if (!items.length) return `<div class="empty">No dishes match these filters. Raise the price limit or choose another category.</div>`;
+  return items.map(i => `
+    <div class="dish ${i.availability !== "Available" ? "off" : ""}">
+      <div class="info"><div class="name">${esc(i.name)}</div>
+        <div class="muted" style="font-size:.85rem">${esc(i.category)}${showRest ? " · " + esc(i.restaurantName) : ""}
+          ${i.availability !== "Available" ? ' <span class="badge bad">Unavailable</span>' : ""}</div></div>
+      <div class="price">${inr(i.price)}</div>
+      <button class="btn sm" data-add="${esc(i.itemId)}" ${i.availability !== "Available" ? "disabled" : ""}>Add</button>
+    </div>`).join("");
+}
+function bindDishes(items) {
+  $$("[data-add]").forEach(b => b.onclick = () => addToCart(items.find(i => i.itemId === b.dataset.add)));
+}
+let searchTimer;
+$("#dishSearch").oninput = e => {
+  clearTimeout(searchTimer);
+  const term = e.target.value.trim();
+  searchTimer = setTimeout(guard(async () => {
+    if (!term) { await loadMenu(true); return; }
+    const items = await api("/menu/search?q=" + encodeURIComponent(term));
+    $("#menuPane").innerHTML = `<h2>Dishes matching “${esc(term)}”</h2>
+      <p class="muted">Results come from every restaurant.</p><div>${dishRows(items, true)}</div>`;
+    bindDishes(items);
+  }), 250);
+};
+
+/* ---------------- CART ---------------- */
+function addToCart(item) {
+  if (S.cart.restaurantId && S.cart.restaurantId !== item.restaurantId && Object.keys(S.cart.lines).length) {
+    if (!confirm("Your cart has dishes from another restaurant. Start a new cart with this dish?")) return;
+    S.cart.lines = {};
+  }
+  S.cart.restaurantId = item.restaurantId;
+  const l = S.cart.lines[item.itemId] || (S.cart.lines[item.itemId] = { item, qty: 0 });
+  l.qty = Math.min(20, l.qty + 1);
+  renderCart();
+}
+function renderCart() {
+  const lines = Object.values(S.cart.lines);
+  const total = lines.reduce((s, l) => s + l.item.price * l.qty, 0);
+  const r = S.restaurants.find(x => x.restaurantId === S.cart.restaurantId);
+  $("#cartPane").innerHTML = `<h3>Your cart${r ? " · " + esc(r.name) : ""}</h3>` + (lines.length ? `
+    ${lines.map(l => `<div class="line"><div class="n">${esc(l.item.name)}<div class="muted" style="font-size:.8rem">${inr(l.item.price)} each</div></div>
+      <div class="qty"><button data-q="-1" data-id="${esc(l.item.itemId)}" aria-label="Remove one ${esc(l.item.name)}">−</button><b>${l.qty}</b>
+      <button data-q="1" data-id="${esc(l.item.itemId)}" aria-label="Add one ${esc(l.item.name)}">+</button></div>
+      <b style="min-width:60px;text-align:right">${inr(l.item.price * l.qty)}</b></div>`).join("")}
+    <div class="total"><span>Total</span><span>${inr(total)}</span></div>
+    <label>Payment method</label>
+    <div class="pay">${["UPI", "Card", "Cash"].map((m, i) => `<label><input type="radio" name="pm" value="${m}" ${i === 0 ? "checked" : ""}>${m}</label>`).join("")}</div>
+    <button class="btn alt" id="placeBtn" style="width:100%">Place order</button>
+    <p class="muted" style="font-size:.8rem;margin:8px 0 0">Cash orders are paid on delivery.</p>`
+    : `<div class="empty">Your cart is empty. Add a dish to start an order.</div>`);
+  $$("#cartPane [data-q]").forEach(b => b.onclick = () => {
+    const l = S.cart.lines[b.dataset.id]; l.qty += Number(b.dataset.q);
+    if (l.qty < 1) delete S.cart.lines[b.dataset.id];
+    l.qty = Math.min(l.qty, 20); renderCart();
+  });
+  if ($("#placeBtn")) $("#placeBtn").onclick = guard(placeOrder);
+}
+async function placeOrder() {
+  if (needLogin()) return;
+  const btn = $("#placeBtn"); btn.disabled = true;
+  try {
+    const out = await api("/orders", { method: "POST", body: {
+      customerId: S.customer.customerId, restaurantId: S.cart.restaurantId,
+      paymentMethod: $("input[name=pm]:checked").value,
+      items: Object.values(S.cart.lines).map(l => ({ itemId: l.item.itemId, quantity: l.qty })) } });
+    S.cart = { restaurantId: null, lines: {} };
+    toast(`Order ${out.orderId} placed · ${inr(out.totalAmount)}`);
+    show("orders");
+  } finally { if (btn.isConnected) btn.disabled = false; }
+}
+
+/* ---------------- MY ORDERS ---------------- */
+const STEPS = ["Placed", "Preparing", "Out for Delivery", "Delivered"];
+const payBadge = s => `<span class="badge ${s === "Completed" ? "" : s === "Pending" ? "warn" : "bad"}">${esc(s || "—")}</span>`;
+async function loadOrders() {
+  const box = $("#ordersList");
+  if (!S.customer) { box.innerHTML = `<div class="empty">Sign in to see your orders and track them.</div>`; return; }
+  const orders = await api("/orders?customerId=" + S.customer.customerId);
+  if (!orders.length) { box.innerHTML = `<div class="empty">You have no orders yet. Choose a restaurant under “Order food” to place your first one.</div>`; return; }
+  box.innerHTML = orders.map(o => {
+    const idx = STEPS.indexOf(o.orderStatus), cancelled = o.orderStatus === "Cancelled";
+    const edit = S.editing === o.orderId;
+    return `<article class="card ocard">
+      <header><div><h3>${esc(o.restaurantName)} · ${esc(o.orderId)}</h3><span class="muted" style="font-size:.88rem">${fmtDate(o.orderDate)}</span></div>
+        <div>${payBadge(o.paymentStatus)} <span class="badge" style="margin-left:4px">${esc(o.paymentMethod)}</span></div></header>
+      ${cancelled ? `<div class="cancelled-note">This order was cancelled${o.paymentStatus === "Refunded" ? " and your payment was refunded" : ""}.</div>` :
+        `<ol class="tracker" aria-label="Order progress">${STEPS.map((s, i) =>
+          `<li class="${i <= idx ? "done" : ""} ${i === idx ? "now" : ""}" ${i === idx ? 'aria-current="step"' : ""}>${s}</li>`).join("")}</ol>`}
+      <table class="items"><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Subtotal</th></tr></thead><tbody>
+        ${o.items.map(i => `<tr><td>${esc(i.name)}</td><td class="num">${edit ? `<input type="number" min="0" max="20" value="${i.quantity}" data-qty="${esc(i.itemId)}" aria-label="Quantity of ${esc(i.name)}">` : i.quantity}</td><td class="num">${inr(i.subtotal)}</td></tr>`).join("")}
+        <tr><td colspan="2"><b>Total</b></td><td class="num"><b>${inr(o.totalAmount)}</b></td></tr></tbody></table>
+      <div class="actions">
+        ${edit ? `<button class="btn" data-save="${o.orderId}">Save changes</button><button class="btn ghost" data-stop>Keep original</button>` : ""}
+        ${!edit && o.orderStatus === "Placed" ? `<button class="btn ghost" data-edit="${o.orderId}">Modify items</button>` : ""}
+        ${!edit && ["Placed", "Preparing"].includes(o.orderStatus) ? `<button class="btn danger" data-cancel="${o.orderId}">Cancel order</button>` : ""}
+      </div></article>`;
+  }).join("");
+  $$("[data-edit]").forEach(b => b.onclick = () => { S.editing = b.dataset.edit; guard(loadOrders)(); });
+  $$("[data-stop]").forEach(b => b.onclick = () => { S.editing = null; guard(loadOrders)(); });
+  $$("[data-save]").forEach(b => b.onclick = guard(async () => {
+    const items = $$("[data-qty]").map(i => ({ itemId: i.dataset.qty, quantity: Number(i.value) })).filter(i => i.quantity > 0);
+    if (!items.length) throw new Error("Keep at least one item, or cancel the order instead");
+    await api(`/orders/${b.dataset.save}/items`, { method: "PUT", body: { items } });
+    S.editing = null; toast("Order updated"); await loadOrders();
+  }));
+  $$("[data-cancel]").forEach(b => b.onclick = guard(async () => {
+    if (!confirm("Cancel this order? Completed payments are refunded.")) return;
+    await api(`/orders/${b.dataset.cancel}/cancel`, { method: "POST" });
+    toast("Order cancelled"); await loadOrders();
+  }));
+}
+$("#refreshOrders").onclick = guard(loadOrders);
+setInterval(() => { if (S.view === "orders" && !S.editing && !document.hidden) loadOrders().catch(() => {}); }, 5000);
+
+/* ---------------- RESTAURANT PANEL ---------------- */
+const NEXT = { "Placed": ["Preparing", "Start preparing"], "Preparing": ["Out for Delivery", "Send out for delivery"], "Out for Delivery": ["Delivered", "Mark delivered"] };
+async function loadPanel() {
+  S.restaurants = await api("/restaurants");
+  if (!S.panelRest) S.panelRest = S.restaurants[0]?.restaurantId;
+  $("#panelRest").innerHTML = S.restaurants.map(r => `<option value="${esc(r.restaurantId)}" ${r.restaurantId === S.panelRest ? "selected" : ""}>${esc(r.name)} (${esc(r.location)})</option>`).join("");
+  $("#panelRest").onchange = e => { S.panelRest = e.target.value; guard(loadPanel)(); };
+  $("#panelFilter").innerHTML = ["Active", "Delivered", "Cancelled", "All"].map(f => `<button class="chip" aria-pressed="${f === S.panelStatus}" data-f="${f}">${f}</button>`).join("");
+  $$("#panelFilter .chip").forEach(b => b.onclick = () => { S.panelStatus = b.dataset.f; guard(loadPanel)(); });
+  const [orders, menu] = await Promise.all([api(`/restaurants/${S.panelRest}/orders`), api(`/restaurants/${S.panelRest}/menu`)]);
+  const f = S.panelStatus;
+  const shown = orders.filter(o => f === "All" || (f === "Active" ? !["Delivered", "Cancelled"].includes(o.orderStatus) : o.orderStatus === f));
+  $("#panelOrders").innerHTML = shown.length ? shown.map(o => `
+    <div style="padding:12px 0;border-top:1px solid var(--line)">
+      <div class="row-between"><b>${esc(o.orderId)} · ${esc(o.customerName)}</b><span class="badge ${o.orderStatus === "Cancelled" ? "bad" : ""}">${esc(o.orderStatus)}</span></div>
+      <div class="muted" style="font-size:.88rem">${o.items.map(i => `${esc(i.name)} × ${i.quantity}`).join(", ")}</div>
+      <div class="row-between" style="margin-top:6px"><span>${inr(o.totalAmount)} ${payBadge(o.paymentStatus)} <span class="muted">${esc(o.paymentMethod)}</span></span>
+        <span style="display:flex;gap:6px">
+          ${NEXT[o.orderStatus] ? `<button class="btn sm" data-status="${NEXT[o.orderStatus][0]}" data-id="${o.orderId}">${NEXT[o.orderStatus][1]}</button>` : ""}
+          ${["Placed", "Preparing"].includes(o.orderStatus) ? `<button class="btn sm danger" data-status="Cancelled" data-id="${o.orderId}">Reject</button>` : ""}
+        </span></div></div>`).join("") : `<div class="empty">No ${f === "All" ? "" : f.toLowerCase() + " "}orders for this restaurant.</div>`;
+  $$("#panelOrders [data-status]").forEach(b => b.onclick = guard(async () => {
+    await api(`/orders/${b.dataset.id}/status`, { method: "PATCH", body: { status: b.dataset.status } });
+    toast(`${b.dataset.id} → ${b.dataset.status}`); await loadPanel();
+  }));
+  $("#panelMenu").innerHTML = menu.length ? menu.map(i => `
+    <div class="menu-row"><div><b>${esc(i.name)}</b><div class="muted" style="font-size:.82rem">${esc(i.category)}</div></div>
+      <input type="number" min="1" value="${i.price}" data-price="${esc(i.itemId)}" aria-label="Price of ${esc(i.name)}">
+      <button class="btn sm ${i.availability === "Available" ? "ghost" : "alt"}" data-toggle="${esc(i.itemId)}" data-to="${i.availability === "Available" ? "Unavailable" : "Available"}">${i.availability === "Available" ? "Mark sold out" : "Mark available"}</button>
+      <button class="btn sm danger" data-del="${esc(i.itemId)}" aria-label="Delete ${esc(i.name)}">Delete</button></div>`).join("") : `<div class="empty">No menu items yet. Add the first one below.</div>`;
+  $$("[data-price]").forEach(i => i.onchange = guard(async () => { await api(`/menu/${i.dataset.price}`, { method: "PUT", body: { price: Number(i.value) } }); toast("Price saved"); }));
+  $$("[data-toggle]").forEach(b => b.onclick = guard(async () => { await api(`/menu/${b.dataset.toggle}`, { method: "PUT", body: { availability: b.dataset.to } }); await loadPanel(); }));
+  $$("[data-del]").forEach(b => b.onclick = guard(async () => { if (!confirm("Delete this menu item?")) return; await api(`/menu/${b.dataset.del}`, { method: "DELETE" }); toast("Item deleted"); await loadPanel(); }));
+}
+$("#addItemForm").onsubmit = guard(async e => {
+  e.preventDefault();
+  await api(`/restaurants/${S.panelRest}/menu`, { method: "POST", body: { name: $("#aiName").value, category: $("#aiCat").value, price: Number($("#aiPrice").value), availability: $("#aiAvail").value } });
+  e.target.reset(); toast("Menu item added"); await loadPanel();
+});
+$("#addRestForm").onsubmit = guard(async e => {
+  e.preventDefault();
+  const r = await api("/restaurants", { method: "POST", body: { name: $("#arName").value, location: $("#arLoc").value, cuisine: $("#arCui").value } });
+  S.panelRest = r.restaurantId; e.target.reset(); toast(`${r.name} registered`); await loadPanel();
+});
+
+/* ---------------- ANALYTICS ---------------- */
+function hbars(rows, label, value, fmt = inr, cls = "") {
+  const max = Math.max(1, ...rows.map(r => r[value]));
+  return rows.map(r => `<div class="hbar"><span title="${esc(r[label])}">${esc(r[label])}</span>
+    <div class="track"><div class="fill ${cls}" style="width:${(r[value] / max * 100).toFixed(1)}%"></div></div><span>${fmt(r[value])}</span></div>`).join("") || `<div class="empty">No data yet.</div>`;
+}
+function dailyChart(rows) {
+  if (!rows.length) return `<div class="empty">No data yet.</div>`;
+  const W = 560, H = 190, pl = 40, pb = 28, pt = 10, n = rows.length;
+  const maxR = Math.max(...rows.map(r => r.revenue)), maxC = Math.max(...rows.map(r => r.cumulative));
+  const bw = (W - pl) / n, x = i => pl + bw * i + bw / 2;
+  const bars = rows.map((r, i) => { const h = r.revenue / maxR * (H - pb - pt); return `<rect x="${x(i) - bw * .3}" y="${H - pb - h}" width="${bw * .6}" height="${h}" rx="3" fill="#F0B429"><title>${r.date}: ${inr(r.revenue)}</title></rect>`; }).join("");
+  const pts = rows.map((r, i) => `${x(i)},${H - pb - r.cumulative / maxC * (H - pb - pt)}`).join(" ");
+  const labels = rows.map((r, i) => (n <= 8 || i % Math.ceil(n / 8) === 0) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${r.date.slice(5)}</text>` : "").join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily revenue bars with cumulative revenue line">
+    <line x1="${pl}" y1="${H - pb}" x2="${W}" y2="${H - pb}" stroke="#D6DFD8"/>${bars}
+    <polyline points="${pts}" fill="none" stroke="#1F5A43" stroke-width="2.5"/>
+    ${rows.map((r, i) => `<circle cx="${x(i)}" cy="${H - pb - r.cumulative / maxC * (H - pb - pt)}" r="3.5" fill="#1F5A43"><title>Cumulative to ${r.date}: ${inr(r.cumulative)}</title></circle>`).join("")}
+    ${labels}<text x="4" y="14">max ${inr(maxC)}</text></svg>
+    <div class="muted" style="font-size:.82rem"><span style="color:#E0A41E">■</span> daily revenue &nbsp; <span style="color:#1F5A43">●</span> cumulative revenue</div>`;
+}
+async function loadAnalytics() {
+  const d = await api("/analytics");
+  const k = d.kpis;
+  $("#analyticsBody").innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><b>${k.orders}</b><span>Orders (excl. cancelled)</span></div>
+      <div class="kpi"><b>${inr(k.revenue)}</b><span>Revenue</span></div>
+      <div class="kpi"><b>${inr(k.avgOrder)}</b><span>Average order value</span></div>
+      <div class="kpi"><b>${k.activeOrders}</b><span>Active orders</span></div>
+      <div class="kpi"><b>${k.pendingPayments}</b><span>Pending payments</span></div>
+    </div>
+    <div class="charts">
+      <div class="card chart"><h3>Revenue by restaurant</h3>${hbars(d.revenueByRestaurant, "name", "revenue")}</div>
+      <div class="card chart"><h3>Top-selling dishes (units)</h3>${hbars(d.topItems, "name", "units", n => n, "t")}</div>
+      <div class="card chart wide"><h3>Daily sales and running total</h3>${dailyChart(d.dailySales)}</div>
+      <div class="card chart"><h3>Orders by status</h3>${hbars(d.statusCounts, "status", "count", n => n)}</div>
+      <div class="card chart"><h3>Revenue by payment method</h3>${hbars(d.paymentMethods, "method", "amount", inr, "t")}</div>
+      <div class="card chart"><h3>Sales by category</h3>${hbars(d.categorySales, "category", "revenue")}</div>
+      <div class="card chart"><h3>Top customers</h3><table class="items"><thead><tr><th>Customer</th><th class="num">Orders</th><th class="num">Spent</th></tr></thead><tbody>
+        ${d.topCustomers.map(c => `<tr><td>${esc(c.name)}</td><td class="num">${c.orders}</td><td class="num">${inr(c.spent)}</td></tr>`).join("")}</tbody></table></div>
+      <div class="card chart wide"><h3>${S.customer ? "Recommended for " + esc(S.customer.name) : "Recommended dishes"}</h3>
+        <div id="recs"></div></div>
+    </div>`;
+  const recBox = $("#recs");
+  if (!S.customer) { recBox.innerHTML = `<div class="empty">Sign in to see popular dishes you have not tried yet.</div>`; return; }
+  const recs = await api("/recommendations/" + S.customer.customerId);
+  recBox.innerHTML = recs.length ? `<p class="muted" style="margin-top:0">Best-selling available dishes you have not ordered before.</p><div class="recs">${recs.map(r => `
+    <div class="rec"><b>${esc(r.name)}</b><div class="muted" style="font-size:.85rem">${esc(r.restaurantName)} · ${inr(r.price)}</div>
+    <div style="font-size:.82rem;margin-top:4px">${r.units} sold</div></div>`).join("")}</div>`
+    : `<div class="empty">You have tried every popular dish. Check back after more orders come in.</div>`;
+}
+$("#refreshAnalytics").onclick = guard(loadAnalytics);
+
+/* ---------------- ACCOUNT ---------------- */
+function renderAccount() {
+  const box = $("#accountBody");
+  if (S.customer) {
+    const c = S.customer;
+    $("#accTitle").textContent = "Your profile"; $("#accSub").textContent = `Customer ID ${c.customerId} · ${c.email}`;
+    box.innerHTML = `<form class="card" id="profileForm">
+      <div class="field"><label for="pName">Name</label><input type="text" id="pName" value="${esc(c.name)}" required></div>
+      <div class="field"><label for="pPhone">Phone (10 digits)</label><input type="text" id="pPhone" value="${esc(c.phone)}" required inputmode="numeric"></div>
+      <div class="field"><label for="pAddr">Delivery address</label><input type="text" id="pAddr" value="${esc(c.address)}" required></div>
+      <button class="btn">Save profile</button></form>`;
+    $("#profileForm").onsubmit = guard(async e => {
+      e.preventDefault();
+      setCustomer(await api("/customers/" + c.customerId, { method: "PUT", body: { name: $("#pName").value, phone: $("#pPhone").value, address: $("#pAddr").value } }));
+      toast("Profile saved"); renderAccount();
+    });
+    return;
+  }
+  $("#accTitle").textContent = "Sign in or register"; $("#accSub").textContent = "Sign in with your email. Try rahul@gmail.com to explore with sample data.";
+  box.innerHTML = `
+    <form class="card" id="loginForm"><h3 style="margin-bottom:12px">Sign in</h3>
+      <div class="field"><label for="lEmail">Email</label><input type="email" id="lEmail" required></div>
+      <button class="btn">Sign in</button></form>
+    <form class="card" id="regForm"><h3 style="margin-bottom:12px">Create an account</h3>
+      <div class="field"><label for="rName">Name</label><input type="text" id="rName" required></div>
+      <div class="field"><label for="rPhone">Phone (10 digits)</label><input type="text" id="rPhone" required inputmode="numeric"></div>
+      <div class="field"><label for="rEmail">Email</label><input type="email" id="rEmail" required></div>
+      <div class="field"><label for="rAddr">Delivery address</label><input type="text" id="rAddr" required></div>
+      <button class="btn alt">Create account</button></form>`;
+  $("#loginForm").onsubmit = guard(async e => {
+    e.preventDefault(); setCustomer(await api("/login", { method: "POST", body: { email: $("#lEmail").value } }));
+    toast("Welcome back, " + S.customer.name); show("order");
+  });
+  $("#regForm").onsubmit = guard(async e => {
+    e.preventDefault();
+    setCustomer(await api("/customers", { method: "POST", body: { name: $("#rName").value, phone: $("#rPhone").value, email: $("#rEmail").value, address: $("#rAddr").value } }));
+    toast("Account created. Welcome, " + S.customer.name); show("order");
+  });
+}
+function setCustomer(c) { S.customer = c; localStorage.setItem("tiffin.customer", JSON.stringify(c)); renderWho(); }
+
+/* ---------------- start ---------------- */
+renderWho();
+show("order");
+</script>
+</body>
+</html>
